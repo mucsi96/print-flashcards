@@ -88,7 +88,7 @@ program
   )
   .option('-c, --cards <file path>', 'cards csv file path', 'flashcards.csv')
   .option('-d, --delimiter <string>', 'cards csv file delimiter', '\t')
-  .option('-r, --renderer <node module>', 'custom card renderer')
+  .option('--renderer <node module>', 'custom card renderer')
   .option('-o, --output <file path>', 'output pdf file path', 'flashcards.pdf');
 
 function readCards(filePath: string, delimiter: string): Card[] {
@@ -117,7 +117,8 @@ function readCards(filePath: string, delimiter: string): Card[] {
 }
 
 function getOptions(cliOptions: CLIOptions): Options {
-  const cardRenderer = cliOptions.renderer && require(cliOptions.renderer);
+  const cardRenderer =
+    cliOptions.renderer && require(resolve(process.cwd(), cliOptions.renderer));
 
   return {
     cards: readCards(cliOptions.cards, cliOptions.delimiter),

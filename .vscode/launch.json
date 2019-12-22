@@ -25,7 +25,9 @@
         "-l",
         "40",
         "-x",
-        "30"
+        "30",
+        "--renderer",
+        "./cardRenderer"
       ],
       "runtimeArgs": ["-r", "ts-node/register"],
       "cwd": "${workspaceRoot}/dist",
