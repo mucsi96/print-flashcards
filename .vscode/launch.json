@@ -1,0 +1,39 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "test",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceRoot}/node_modules/.bin/ts-mocha",
+      "runtimeArgs": ["test/**/*.test.ts"],
+      "cwd": "${workspaceRoot}",
+      "protocol": "inspector"
+    },
+    {
+      "name": "cli",
+      "type": "node",
+      "request": "launch",
+      "args": [
+        "${workspaceRoot}/src/cli.ts",
+        "-t",
+        "40",
+        "-r",
+        "40",
+        "-b",
+        "40",
+        "-l",
+        "40",
+        "-x",
+        "30"
+      ],
+      "runtimeArgs": ["-r", "ts-node/register"],
+      "cwd": "${workspaceRoot}/dist",
+      "protocol": "inspector",
+      "internalConsoleOptions": "openOnSessionStart",
+      "env": {
+        "TS_NODE_IGNORE": "false"
+      }
+    }
+  ]
+}
