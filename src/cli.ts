@@ -3,100 +3,46 @@ import program from 'commander';
 import { readFileSync } from 'fs';
 import { parse } from 'papaparse';
 import { isAbsolute, resolve } from 'path';
-import { Card, createFlashcards, Options } from '.';
+import { Card, createFlashcards, Layout, Options } from '.';
 
 type CLIOptions = {
-  pageWidth: number;
-  pageHeight: number;
-  landscape: boolean;
-  topMargin: number;
-  bottomMargin: number;
-  rightMargin: number;
-  leftMargin: number;
-  verticalGap: number;
-  horizontalGap: number;
-  cardsOnPage: number;
-  columnsOnPage: number;
   cards: string;
   delimiter: string;
+  layout: string;
+  layoutTest: boolean;
   renderer: string;
   output: string;
 };
 
+const layoutScheme = {
+  pageWidth: 'number',
+  pageHeight: 'number',
+  cardWidth: 'number',
+  cardHeight: 'number',
+  landscape: 'boolean',
+  verticalOffset: 'number',
+  horizontalOffset: 'number',
+  rowGap: 'number',
+  columnGap: 'number',
+  cardsOnPage: 'number',
+  columnsOnPage: 'number'
+};
+
 program
   .name('print-flashcards')
-  .option(
-    '-w, --page-width <number>',
-    'page width in PostScript points',
-    parseFloat,
-    595.28
-  )
-  .option(
-    '-h, --page-height <number>',
-    'page height in PostScript points',
-    parseFloat,
-    841.89
-  )
-  .option('--landscape', 'sets orientation to landscape')
-  .option(
-    '-t, --top-margin <number>',
-    'page top margin in PostScript points',
-    parseFloat,
-    72
-  )
-  .option(
-    '-r, --right-margin <number>',
-    'page right margin in PostScript points',
-    parseFloat,
-    72
-  )
-  .option(
-    '-b, --bottom-margin <number>',
-    'page bottom margin in PostScript points',
-    parseFloat,
-    72
-  )
-  .option(
-    '-l, --left-margin <number>',
-    'page left margin in PostScript points',
-    parseFloat,
-    72
-  )
-  .option(
-    '-y, --vertical-gap <number>',
-    'gap between card rows in PostScript points',
-    parseFloat,
-    0
-  )
-  .option(
-    '-x, --horizontal-gap <number>',
-    'gap between card columns in PostScript points',
-    parseFloat,
-    0
-  )
-  .option(
-    '-n, --cards-on-page <number>',
-    'number of cards on a page',
-    parseInt,
-    10
-  )
-  .option(
-    '-m, --columns-on-page <number>',
-    'number of columns on a page',
-    parseInt,
-    2
-  )
+  .option('-l, --layout <file path>', 'layout file path', 'layout.json')
+  .option('-t, --layout-test', 'create layout test output', false)
   .option('-c, --cards <file path>', 'cards csv file path', 'flashcards.csv')
   .option('-d, --delimiter <string>', 'cards csv file delimiter', '\t')
-  .option('--renderer <node module>', 'custom card renderer')
+  .option('-r, --renderer <node module>', 'custom card renderer')
   .option('-o, --output <file path>', 'output pdf file path', 'flashcards.pdf');
 
 function readCards(filePath: string, delimiter: string): Card[] {
-  const cardsFile = isAbsolute(filePath)
+  const absolutePath = isAbsolute(filePath)
     ? filePath
     : resolve(process.cwd(), filePath);
-  const cardsFileContent = readFileSync(cardsFile, 'utf8');
-  const result = parse(cardsFileContent.trim(), {
+  const fileContent = readFileSync(absolutePath, 'utf8');
+  const result = parse(fileContent.trim(), {
     delimiter
   });
 
@@ -116,23 +62,47 @@ function readCards(filePath: string, delimiter: string): Card[] {
   }));
 }
 
+function readLayout(filePath: string): Layout {
+  const absolutePath = isAbsolute(filePath)
+    ? filePath
+    : resolve(process.cwd(), filePath);
+  const fileContent = readFileSync(absolutePath, 'utf8');
+  const layout = JSON.parse(fileContent) as Layout;
+
+  Object.keys(layout).forEach(key => {
+    if (!Object.keys(layoutScheme).includes(key)) {
+      throw new Error(`Not recognized property ${key} in layout file`);
+    }
+  });
+
+  Object.keys(layoutScheme).forEach(key => {
+    if (!Object.keys(layout).includes(key)) {
+      throw new Error(`Missing property ${key} in layout file`);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const expectedType = typeof (layout as any)[key];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const actualType = (layoutScheme as any)[key];
+
+    if (actualType !== expectedType) {
+      throw new Error(
+        `Property ${key} should be ${expectedType} in layout file`
+      );
+    }
+  });
+
+  return layout;
+}
+
 function getOptions(cliOptions: CLIOptions): Options {
   const cardRenderer =
     cliOptions.renderer && require(resolve(process.cwd(), cliOptions.renderer));
 
   return {
     cards: readCards(cliOptions.cards, cliOptions.delimiter),
-    pageWidth: cliOptions.pageWidth,
-    pageHeight: cliOptions.pageHeight,
-    orientation: cliOptions.landscape ? 'landscape' : 'portrait',
-    topMargin: cliOptions.topMargin,
-    rightMargin: cliOptions.rightMargin,
-    bottomMargin: cliOptions.bottomMargin,
-    leftMargin: cliOptions.leftMargin,
-    verticalGap: cliOptions.verticalGap,
-    horizontalGap: cliOptions.horizontalGap,
-    cardsOnPage: cliOptions.cardsOnPage,
-    columnsOnPage: cliOptions.columnsOnPage,
+    layout: readLayout(cliOptions.layout),
+    layoutTest: cliOptions.layoutTest,
     outputFile: cliOptions.output,
     cardRenderer
   };

@@ -1,24 +1,28 @@
 import { createWriteStream } from 'fs';
 import { isAbsolute, resolve } from 'path';
 import PDFDocument from 'pdfkit';
-import { calculateCardHeight, calculateCardWidth } from './card';
 import { createPages, renderPage } from './page';
 
 export type Options = {
+  layout: Layout;
+  layoutTest: boolean;
   cards: Card[];
-  pageWidth: number;
-  pageHeight: number;
-  orientation: 'portrait' | 'landscape';
-  topMargin: number;
-  bottomMargin: number;
-  rightMargin: number;
-  leftMargin: number;
-  verticalGap: number;
-  horizontalGap: number;
-  cardsOnPage: number;
-  columnsOnPage: number;
   cardRenderer: (options: CardRendererOptions) => void;
   outputFile: string;
+};
+
+export type Layout = {
+  pageWidth: number;
+  pageHeight: number;
+  cardWidth: number;
+  cardHeight: number;
+  landscape: boolean;
+  verticalOffset: number;
+  horizontalOffset: number;
+  rowGap: number;
+  columnGap: number;
+  cardsOnPage: number;
+  columnsOnPage: number;
 };
 
 export type Card = {
@@ -37,13 +41,7 @@ export type CardRendererOptions = {
 
 export function createFlashcards(options: Options): void {
   const {
-    pageWidth,
-    pageHeight,
-    orientation,
-    topMargin,
-    rightMargin,
-    bottomMargin,
-    leftMargin,
+    layout: { pageWidth, pageHeight, landscape },
     outputFile
   } = options;
 
@@ -51,27 +49,21 @@ export function createFlashcards(options: Options): void {
     pdfVersion: '1.7ext3',
     autoFirstPage: false,
     size: [pageWidth, pageHeight],
-    layout: orientation,
-    margins: {
-      top: topMargin,
-      right: rightMargin,
-      bottom: bottomMargin,
-      left: leftMargin
-    }
+    layout: landscape ? 'landscape' : 'portrait',
+    margin: 0
   });
 
   const pages = createPages(options);
-  const cardWidth = calculateCardWidth(options);
-  const cardHeight = calculateCardHeight(options);
 
-  pages.forEach(words => {
-    renderPage({
-      document,
-      words,
-      cardWidth,
-      cardHeight,
-      ...options
-    });
+  pages.forEach((words, index) => {
+    renderPage(
+      {
+        document,
+        index,
+        words
+      },
+      options
+    );
   });
 
   const outputFilePath = isAbsolute(outputFile)
