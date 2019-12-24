@@ -3,7 +3,8 @@ import program from 'commander';
 import { readFileSync } from 'fs';
 import { parse } from 'papaparse';
 import { isAbsolute, resolve } from 'path';
-import { Card, createFlashcards, Layout, Options } from '.';
+import { createFlashcards, Layout, Options } from '.';
+import { Card } from './card';
 
 type CLIOptions = {
   cards: string;

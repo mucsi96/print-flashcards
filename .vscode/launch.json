@@ -18,7 +18,7 @@
         "${workspaceRoot}/src/cli.ts",
         "-r",
         "cardRenderer.js",
-        "-t",
+        // "-t",
         "-l",
         "sigel-dp930.json"
       ],

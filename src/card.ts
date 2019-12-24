@@ -1,4 +1,17 @@
-import { CardRendererOptions } from '.';
+export type Card = {
+  front: string;
+  back: string;
+};
+
+export type CardRendererOptions = {
+  page: PDFKit.PDFDocument;
+  text: string;
+  front: boolean;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
 
 export function defaultCardRenderer({
   page,

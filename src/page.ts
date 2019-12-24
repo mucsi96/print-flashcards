@@ -87,6 +87,7 @@ export function renderPage(
 
     cardRenderer({
       page,
+      front: index % 2 === 0,
       text: word,
       x,
       y,

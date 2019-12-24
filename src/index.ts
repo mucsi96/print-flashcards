@@ -1,6 +1,7 @@
 import { createWriteStream } from 'fs';
 import { isAbsolute, resolve } from 'path';
 import PDFDocument from 'pdfkit';
+import { Card, CardRendererOptions } from './card';
 import { createPages, renderPage } from './page';
 
 export type Options = {
@@ -23,20 +24,6 @@ export type Layout = {
   columnGap: number;
   cardsOnPage: number;
   columnsOnPage: number;
-};
-
-export type Card = {
-  front: string;
-  back: string;
-};
-
-export type CardRendererOptions = {
-  page: PDFKit.PDFDocument;
-  text: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
 };
 
 export function createFlashcards(options: Options): void {
